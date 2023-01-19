@@ -20,10 +20,16 @@ app.get('/', (req, res) => {
 app.post('/signup', async (req, res) => {
     const { email, password } = req.body;
     try {
-        bcrypt.hash(String(password), saltRounds, async (err, hash) => {
-            const user = await User.create({ email, password: hash });
-            res.status(201).send({ success: true, message: 'User created successfully', data: { id: user._id, email: user.email } });
-        });
+        let getUser = await User.findOne({ email });
+        if (getUser) {
+            res.status(400).send({ success: false, message: 'User already exists' });
+        }
+        else {
+            bcrypt.hash(String(password), saltRounds, async (err, hash) => {
+                const user = await User.create({ email, password: hash });
+                res.status(201).send({ success: true, message: 'User created successfully', data: { id: user._id, email: user.email } });
+            });
+        }
     } catch (error) {
         res.status(500).send({ success: false, message: 'Internal server error', error: error.message });
     }
